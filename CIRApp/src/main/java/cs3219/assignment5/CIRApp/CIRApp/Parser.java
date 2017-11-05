@@ -37,7 +37,6 @@ public class Parser {
 
 	private void parseQuery(String[] inputArr) {
 		extractConferences(inputArr);
-
 	}
 
 	private void parseDataLocation(String dataLoc) {
@@ -114,16 +113,16 @@ public class Parser {
 		boolean isConf = false;
 		if (string.length() == 4) {
 			if (string.charAt(3) == ',') {
-				String confName = string.substring(0, 3);
+				//String confName = string.substring(0, 3);
 				isConf = true;
-				System.out.println(confName + " is a conference name");
+				//System.out.println(confName + " is a conference name");
 			} else {
 				isConf = false;
 			}
 		} else if (string.length() == 3) {
 			if (Character.isLetter(string.charAt(0)) && Character.isDigit(string.charAt(1))
 					&& Character.isDigit(string.charAt(2))) {
-				System.out.println(string + " is a conference name");
+				//System.out.println(string + " is a conference name");
 				isConf = true;
 			}
 		} else {
