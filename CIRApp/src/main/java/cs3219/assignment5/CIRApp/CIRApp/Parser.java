@@ -12,8 +12,8 @@ public class Parser {
 	private static final String DATASETS = "datasets=";
 	private static final String YEAR = "year=";
 	private static final String YEARS = "years=";
-	private static final String CONFERENCE = "conference=";
-	private static final String CONFERENCES = "conferences=";
+	private static final String CONFERENCE = "conference";
+	private static final String CONFERENCES = "conferences";
 	private static final String VENUE = "venue=";
 	private static final String ALL = "all";
 	private static final String DASH = "-";
@@ -27,11 +27,17 @@ public class Parser {
 	public void parseInput(String input, String dataLoc) throws IOException {
 		String[] inputArr = input.split(" ");
 		printArr(inputArr);
-		parseDataLocation(dataLoc);
-		parseCommand(inputArr[0]);
-		parseQueryType(inputArr);
-		parseLocation(inputArr);
-		InputHandler handler = new InputHandler(inputObj);
+		// parseDataLocation(dataLoc);
+		// parseCommand(inputArr[0]);
+		// parseQueryType(inputArr);
+		// parseLocation(inputArr);
+		parseQuery(inputArr);
+		// InputHandler handler = new InputHandler(inputObj);
+	}
+
+	private void parseQuery(String[] inputArr) {
+		extractConferences(inputArr);
+
 	}
 
 	private void parseDataLocation(String dataLoc) {
@@ -78,16 +84,52 @@ public class Parser {
 
 	private void extractConferences(String[] locArr) {
 		ArrayList<String> confList = new ArrayList<String>();
-		if (locArr.length == 2) {
-			confList.add(locArr[1]);
-		} else {
-			for (String i : locArr) {
-				if (!i.equalsIgnoreCase(CONFERENCE) && !i.equalsIgnoreCase(CONFERENCES) && !i.equalsIgnoreCase(DASH)) {
-					confList.add(i);
+		for (int i = 0; i < locArr.length; i++) {
+			if (locArr[i].equalsIgnoreCase(CONFERENCE) || locArr[i].equalsIgnoreCase(CONFERENCES)) {
+				for (int j = i + 1; j < locArr.length; j++) {
+					if (isConference(locArr[j])) {
+						String confName = removeCommas(locArr[j]);
+						confList.add(confName);
+					}
 				}
 			}
 		}
+		System.out.println("This is the confList: " + confList);
 		inputObj.setConferences(confList);
+	}
+
+	private String removeCommas(String string) {
+		if (string.length() == 4) {
+			if (string.charAt(3) == ',') {
+				return string.substring(0, 3);
+			} else {
+				return string;
+			}
+		} else {
+			return string;
+		}
+	}
+
+	private boolean isConference(String string) {
+		boolean isConf = false;
+		if (string.length() == 4) {
+			if (string.charAt(3) == ',') {
+				String confName = string.substring(0, 3);
+				isConf = true;
+				System.out.println(confName + " is a conference name");
+			} else {
+				isConf = false;
+			}
+		} else if (string.length() == 3) {
+			if (Character.isLetter(string.charAt(0)) && Character.isDigit(string.charAt(1))
+					&& Character.isDigit(string.charAt(2))) {
+				System.out.println(string + " is a conference name");
+				isConf = true;
+			}
+		} else {
+			isConf = false;
+		}
+		return isConf;
 	}
 
 	public void extractYears(String[] locArr) {
