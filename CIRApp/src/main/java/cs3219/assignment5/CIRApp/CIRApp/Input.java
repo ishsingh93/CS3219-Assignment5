@@ -91,4 +91,5 @@ public class Input {
 
 	public void setDataLocation(String dataLoc) {
 			this.dataLoc = dataLoc;
-		}
+	}
+}

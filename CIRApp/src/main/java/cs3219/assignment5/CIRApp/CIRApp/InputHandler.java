@@ -18,10 +18,10 @@ public class InputHandler {
 		String command = inputObj.getQueryCommand();
 		switch (command) {
 		case FILEOP:
-			DataManager dmFile = new DataManager(inputObj);
+			//DataManager dmFile = new DataManager(inputObj);
 			break;
 		case DATAOP:
-			DataManager dmData = new DataManager(inputObj);
+			//DataManager dmData = new DataManager(inputObj);
 			break;
 		default:
 			break;
