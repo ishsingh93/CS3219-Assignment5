@@ -17,6 +17,10 @@ public class Parser {
 	private static final String VENUE = "venue=";
 	private static final String ALL = "all";
 	private static final String DASH = "-";
+	private static final String GIVE = "give";
+	private static final String IN = "in";
+	private static final String FOR = "for";
+	private static final String TOP = "top";
 
 	Input inputObj;
 
@@ -26,62 +30,65 @@ public class Parser {
 
 	public void parseInput(String input, String dataLoc) throws IOException {
 		String[] inputArr = input.split(" ");
-		printArr(inputArr);
-		// parseDataLocation(dataLoc);
-		// parseCommand(inputArr[0]);
-		// parseQueryType(inputArr);
-		// parseLocation(inputArr);
+		// printArr(inputArr);
 		parseQuery(inputArr);
 		// InputHandler handler = new InputHandler(inputObj);
 	}
 
 	private void parseQuery(String[] inputArr) {
-		extractConferences(inputArr);
-	}
+		if (inputArr[0].equalsIgnoreCase(FOR)) {
+			extractConferencesFOR(inputArr);
+			extractQueryTypeFOR(inputArr);
+			extractYearsFOR(inputArr);
+		} 
 
-	private void parseDataLocation(String dataLoc) {
-		inputObj.setDataLocation(dataLoc);
-	}
-
-	private void parseLocation(String[] inputArr) {
-		String location = concatLocationParameter(inputArr);
-		String[] locArr = location.split("\"");
-		// System.out.println(location);
-		switch (locArr[0]) {
-		case AUTHOR:
-			extractAuthors(locArr);
-			break;
-		case AUTHORS:
-			extractAuthors(locArr);
-			break;
-		case YEAR:
-			extractYears(locArr);
-			break;
-		case YEARS:
-			extractYears(locArr);
-			break;
-		case CONFERENCE:
-			extractConferences(locArr);
-			break;
-		case CONFERENCES:
-			extractConferences(locArr);
-			break;
-		case ALL:
-			break;
-		case VENUE:
-			extractVenue(locArr);
-			break;
-		default:
-			break;
+		if (inputArr[0].equalsIgnoreCase(TOP)) {
+			extractSearchContent(inputArr);
+			extractSearchLoc(inputArr);
 		}
 
 	}
 
-	private void extractVenue(String[] locArr) {
-		inputObj.setVenue(locArr[1]);
+	private void extractSearchLoc(String[] inputArr) {
+		// TODO Auto-generated method stub
+		
 	}
 
-	private void extractConferences(String[] locArr) {
+	private void extractSearchContent(String[] inputArr) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private void extractQueryTypeFOR(String[] inputArr) {
+		int startIndex = 0;
+		int endIndex = 0;
+
+		for (int i = 0; i < inputArr.length; i++) {
+			if (inputArr[i].equalsIgnoreCase(GIVE)) {
+				startIndex = i + 1;
+			}
+			if (inputArr[i].equalsIgnoreCase(IN)) {
+				endIndex = i;
+			}
+		}
+
+		String queryType = inputArr[startIndex];
+
+		if (endIndex - startIndex > 1) {
+			for (int j = startIndex + 1; j <= endIndex - 1; j++) {
+				queryType = queryType + " " + inputArr[j];
+			}
+			inputObj.setQueryType(queryType.trim());
+			System.out.println("Query type is: " + queryType);
+		} else {
+			inputObj.setQueryType(queryType);
+			System.out.println("Query type is: " + queryType);
+		}
+
+	}
+
+
+	private void extractConferencesFOR(String[] locArr) {
 		ArrayList<String> confList = new ArrayList<String>();
 		for (int i = 0; i < locArr.length; i++) {
 			if (locArr[i].equalsIgnoreCase(CONFERENCE) || locArr[i].equalsIgnoreCase(CONFERENCES)) {
@@ -113,16 +120,16 @@ public class Parser {
 		boolean isConf = false;
 		if (string.length() == 4) {
 			if (string.charAt(3) == ',') {
-				//String confName = string.substring(0, 3);
+				// String confName = string.substring(0, 3);
 				isConf = true;
-				//System.out.println(confName + " is a conference name");
+				// System.out.println(confName + " is a conference name");
 			} else {
 				isConf = false;
 			}
 		} else if (string.length() == 3) {
 			if (Character.isLetter(string.charAt(0)) && Character.isDigit(string.charAt(1))
 					&& Character.isDigit(string.charAt(2))) {
-				//System.out.println(string + " is a conference name");
+				// System.out.println(string + " is a conference name");
 				isConf = true;
 			}
 		} else {
@@ -131,31 +138,23 @@ public class Parser {
 		return isConf;
 	}
 
-	public void extractYears(String[] locArr) {
+	public void extractYearsFOR(String[] inputArr) {
 		ArrayList<Integer> numList = new ArrayList<Integer>();
-		if (locArr.length == 2) {
-			String[] yrRange = locArr[1].split(DASH);
-			if (yrRange.length > 0) {
-				int startYr = Integer.valueOf(yrRange[0]);
-				int endYr = Integer.valueOf(yrRange[1]);
-				// int numYrs = endYr - startYr;
-				for (int i = startYr; i <= endYr; i++) {
-					numList.add(Integer.valueOf(i));
-				}
-			} else {
-				numList.add(Integer.parseInt(locArr[1]));
-			}
-
-		} else {
-			for (String i : locArr) {
-				if (!i.equalsIgnoreCase(YEAR) && !i.equalsIgnoreCase(YEARS) && !i.equalsIgnoreCase(DASH)) {
-					numList.add(Integer.parseInt(i));
+		for (int i = 0; i < inputArr.length; i++) {
+			if (inputArr[i].equalsIgnoreCase(YEAR) || inputArr[i].equalsIgnoreCase(YEARS)) {
+				if (i + 1 == inputArr.length) {
+					int yr = Integer.valueOf(inputArr[i + 1]);
+					numList.add(Integer.valueOf(yr));
+				} else {
+					String[] yrRange = inputArr[i + 1].split(DASH);
+					int startYr = Integer.valueOf(yrRange[0]);
+					int endYr = Integer.valueOf(yrRange[1]);
+					// int numYrs = endYr - startYr;
+					for (int j = startYr; j <= endYr; j++) {
+						numList.add(Integer.valueOf(j));
+					}
 				}
 			}
-		}
-		System.out.println("the list of years is: ");
-		for (Integer i : numList) {
-			System.out.println(i);
 		}
 		inputObj.setNumYrs(numList);
 	}
@@ -169,22 +168,6 @@ public class Parser {
 		}
 		printArrList(authors);
 		inputObj.setAuthors(authors);
-	}
-
-	private void parseQueryType(String[] inputArr) {
-		String fullQuery = inputArr[1];
-		for (int i = 2; i < inputArr.length; i++) {
-			if (inputArr[i].equals("where")) {
-				fullQuery.trim();
-				break;
-			} else {
-				// fullQuery.concat(inputArr[i]);
-				fullQuery = fullQuery + " " + inputArr[i];
-			}
-		}
-
-		inputObj.setQueryType(fullQuery);
-
 	}
 
 	private void parseCommand(String string) {
