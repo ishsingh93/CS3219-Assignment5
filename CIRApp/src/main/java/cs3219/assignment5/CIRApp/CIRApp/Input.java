@@ -13,6 +13,7 @@ public class Input {
 	private ArrayList<String> authors;
 	private String venue;
 	private String dataLoc;
+	private int num;
 
 	// Constructors
 	public Input() {
@@ -55,6 +56,10 @@ public class Input {
 	public String getDataLocation() {
 		return dataLoc;
 	}
+	
+	public int getNum() {
+		return num;
+	}
 
 	// Setters
 	public void setHomeDirectory(String homeDir) {
@@ -90,6 +95,10 @@ public class Input {
 	}
 
 	public void setDataLocation(String dataLoc) {
-			this.dataLoc = dataLoc;
+		this.dataLoc = dataLoc;
+	}
+
+	public void setNum(int num) {
+		this.num = num;
 	}
 }

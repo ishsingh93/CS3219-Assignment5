@@ -13,7 +13,7 @@ public class UI {
 
 	public String getInput() {
 		System.out.println("Query entered should be in either of these 2 formats: ");
-		System.out.println("1) for conference <conference(s), separated by commas> give <cited documents/authors/citations> in each of the year(s) <start year>-<end year>");
+		System.out.println("1) for conference <conference(s), separated by commas and space> give <cited documents/authors/citations> in each of the year(s) <start year>-<end year>");
 		System.out.println("2) top <number> <authors/citations/cited documents> for <conference/author/year/years");
 		System.out.print("Please enter your query: ");
 		String input = sc.nextLine();

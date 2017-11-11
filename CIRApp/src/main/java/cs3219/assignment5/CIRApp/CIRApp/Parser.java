@@ -40,23 +40,46 @@ public class Parser {
 			extractConferencesFOR(inputArr);
 			extractQueryTypeFOR(inputArr);
 			extractYearsFOR(inputArr);
-		} 
+		}
 
 		if (inputArr[0].equalsIgnoreCase(TOP)) {
+			extractNumber(inputArr);
 			extractSearchContent(inputArr);
 			extractSearchLoc(inputArr);
 		}
 
 	}
 
+	private void extractNumber(String[] inputArr) {
+		int num = Integer.parseInt(inputArr[1]);
+		inputObj.setNum(num);
+		System.out.println("Number is: " + num);
+	}
+
 	private void extractSearchLoc(String[] inputArr) {
-		// TODO Auto-generated method stub
-		
+		String loc = inputArr[inputArr.length - 1];
+		for (int i = inputArr.length - 2; i > 3; i--) {
+			if (inputArr[i].equalsIgnoreCase(FOR)) {
+				break;
+			} else {
+				loc = inputArr[i] + " " + loc;
+			}
+		}
+		inputObj.setDataLocation(loc);
+		System.out.println("Query location is: " + loc);
 	}
 
 	private void extractSearchContent(String[] inputArr) {
-		// TODO Auto-generated method stub
-		
+		String content = inputArr[2];
+		for (int i = 3; i < inputArr.length; i++) {
+			if (inputArr[i].equalsIgnoreCase(FOR)) {
+				break;
+			} else {
+				content = content + " " + inputArr[i];
+			}
+		}
+		inputObj.setQueryType(content);
+		System.out.println("Query type is: " + content);
 	}
 
 	private void extractQueryTypeFOR(String[] inputArr) {
@@ -86,7 +109,6 @@ public class Parser {
 		}
 
 	}
-
 
 	private void extractConferencesFOR(String[] locArr) {
 		ArrayList<String> confList = new ArrayList<String>();
