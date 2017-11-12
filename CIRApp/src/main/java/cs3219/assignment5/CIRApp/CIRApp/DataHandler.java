@@ -30,8 +30,23 @@ public class DataHandler {
 	public DataHandler(Input input) throws IOException {
 		this.setInputObj(input);
 		xmlToJSON(inputObj.getDataLocation(), inputObj.getConferences());
-		// parseJSONFileIntoObjArrList();
+		parseJSONFileIntoObjArrList();
 		execute();
+	}
+	
+	private void parseJSONFileIntoObjArrList() throws IOException {
+		File f = new File(inputObj.getDataLocation());
+		if (f.exists()) {
+			InputStream is = new FileInputStream(inputObj.getDataLocation());
+			ArrayList<String> jsonTxt = (ArrayList<String>) IOUtils.readLines(is, "UTF-8");
+			for (String i : jsonTxt) {
+				JSONObject jo = new JSONObject(i);
+				// FileManager.jsonToTxtFile(jo, "data"+ jsonTxt.indexOf(i) + ".json");
+				dataset.add(jo);
+				//System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
+			}
+		}
+		System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
 	}
 
 	private void execute() throws IOException {
@@ -76,38 +91,9 @@ public class DataHandler {
 		// JSONObject test = dataset.get(7);
 		// jsonToTxtFile(test, "test7.json");
 		ArrayList<String> authors = new ArrayList<String>();
-		for (JSONObject jo : dataset) {
-			if (jo.equals(dataset.get(0))) {
-				continue;
-			} else {
-				JSONObject a = jo.getJSONObject("algorithms");
-				System.out.println("first level okay");
-				JSONArray b = a.getJSONArray("algorithm");
-				System.out.println("second level okay");
-				JSONObject c = getAuthorObjFromJSONArray(b);
-				System.out.println("third level okay");
-				JSONObject d = c.getJSONObject("variant");
-				System.out.println("fourth level okay");
-				if (d.has("author")) {
-					if (d.getJSONArray("author") == null) {
-						JSONObject e = d.getJSONObject("author");
-						System.out.println("fifth level okay");
-						String authorName = e.getString("content");
-						System.out.println("sixth level okay");
-						authors.add(authorName);
-					} else {
-						JSONArray e = d.getJSONArray("author");
-						System.out.println("fifth level okay");
-						for (int i = 0; i < e.length(); i++) {
-							JSONObject obj = e.getJSONObject(i);
-							String authorName = obj.getString("content");
-							authors.add(authorName);
-						}						
-						System.out.println("sixth level okay");
-					}
-				}
-			}
-		}
+		ArrayList<Integer> numYrs = inputObj.getNumYrs();
+		
+		
 
 		System.out.println("These are the authors: " + authors);
 	}
