@@ -37,6 +37,7 @@ public class Parser {
 	}
 
 	private void parseQuery(String[] inputArr) {
+		inputObj.setQueryCommand(inputArr[0]);
 		if (inputArr[0].equalsIgnoreCase(FOR)) {
 			extractConferencesFOR(inputArr);
 			extractQueryTypeFOR(inputArr);
@@ -66,7 +67,7 @@ public class Parser {
 				loc = inputArr[i] + " " + loc;
 			}
 		}
-		inputObj.setDataLocation(loc);
+		inputObj.setSearchLoc(loc);
 		System.out.println("Query location is: " + loc);
 	}
 

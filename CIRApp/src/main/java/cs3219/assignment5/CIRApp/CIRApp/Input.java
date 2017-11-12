@@ -13,6 +13,7 @@ public class Input {
 	private ArrayList<String> authors;
 	private String venue;
 	private String dataLoc;
+	private String searchLoc;
 	private int num;
 
 	// Constructors
@@ -60,6 +61,10 @@ public class Input {
 	public int getNum() {
 		return num;
 	}
+	
+	public String getSearchLoc() {
+		return searchLoc;
+	}
 
 	// Setters
 	public void setHomeDirectory(String homeDir) {
@@ -101,4 +106,9 @@ public class Input {
 	public void setNum(int num) {
 		this.num = num;
 	}
+	
+	public void setSearchLoc(String searchLoc) {
+		this.searchLoc = searchLoc;
+	}
+
 }
