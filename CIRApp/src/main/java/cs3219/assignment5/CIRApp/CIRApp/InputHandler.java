@@ -11,14 +11,15 @@ public class InputHandler {
 
 	public InputHandler(Input inputObj) throws IOException {
 		this.setInputObj(inputObj);
-		assignToManager();
+		DataHandler dmFile = new DataHandler(inputObj);
+		//assignToManager();
 	}
 
 	private void assignToManager() throws IOException {
 		String command = inputObj.getQueryCommand();
 		switch (command) {
 		case FILEOP:
-			//DataManager dmFile = new DataManager(inputObj);
+			//DataHandler dmFile = new DataHandler(inputObj);
 			break;
 		case DATAOP:
 			//DataManager dmData = new DataManager(inputObj);
