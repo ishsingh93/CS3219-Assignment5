@@ -6,10 +6,8 @@ public class AuthorTrendObject {
 	private String confName;
 	private int authorCount;
 	
-	public AuthorTrendObject(int year, String confName, int authorCount) {
-		setYear(year);
-		setConfName(confName);
-		setAuthorCount(authorCount);
+	public AuthorTrendObject() {
+		
 	}
 
 	public int getYear() {

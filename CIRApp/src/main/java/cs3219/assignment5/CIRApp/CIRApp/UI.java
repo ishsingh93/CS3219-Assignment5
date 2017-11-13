@@ -33,7 +33,7 @@ public class UI {
 
 	private String getDataLoc() {
 		System.out.println("Choose data location : ");
-		String ishLoc = "C:\\Users\\User\\Documents\\School\\CS3219-Assignment5\\CIRApp\\dataset\\papers-2017-02-21-sample.json";
+		String ishLoc = "C:\\Users\\User\\Documents\\School\\CS3219-Assignment5\\CIRApp\\dataset\\dataset.json";
 		String javanLoc = "D:\\CS3219-Assignment5\\CIRApp\\dataset";
 		System.out.println("Ish's data location -> " + ishLoc);
 		System.out.println("Javan's data location -> " + javanLoc);

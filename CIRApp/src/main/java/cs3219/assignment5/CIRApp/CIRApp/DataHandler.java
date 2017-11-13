@@ -32,11 +32,11 @@ public class DataHandler {
 
 	public DataHandler(Input input) throws IOException {
 		this.setInputObj(input);
-		xmlToJSON(inputObj.getDataLocation(), inputObj.getConferences());
+		//xmlToJSON(inputObj.getDataLocation(), inputObj.getConferences());
 		parseJSONFileIntoObjArrList();
 		execute();
 	}
-	
+
 	private void parseJSONFileIntoObjArrList() throws IOException {
 		File f = new File(inputObj.getDataLocation());
 		if (f.exists()) {
@@ -46,7 +46,7 @@ public class DataHandler {
 				JSONObject jo = new JSONObject(i);
 				// FileManager.jsonToTxtFile(jo, "data"+ jsonTxt.indexOf(i) + ".json");
 				dataset.add(jo);
-				//System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
+				// System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
 			}
 		}
 		System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
@@ -95,6 +95,7 @@ public class DataHandler {
 		ArrayList<AuthorTrendObject> authorTrend = new ArrayList<AuthorTrendObject>();
 		ArrayList<Integer> numYrs = inputObj.getNumYrs();
 		ArrayList<String> confNames = inputObj.getConferences();
+		int count = 0;
 
 		for (String confName : confNames) {
 			for (int i = 0; i < numYrs.size(); i++) {
@@ -103,15 +104,48 @@ public class DataHandler {
 				for (JSONObject jo : dataset) {
 					if (jo.getString("venue").contains(confName) && jo.getInt("year") == intYr) {
 						extractAuthors(intYr, jo, confName, authors);
+						count++;
 					}
 				}
+
 			}
 		}
 		removeDuplicates(authors);
-		updateAuthorTrendObj(authorTrend);
+		updateAuthorTrendObj(authors, authorTrend);
 		System.out.println("These are the authors (" + authors.size() + ")");
-		for (AuthorObj ato : authors) {
+/*		for (AuthorObj ato : authors) {
 			System.out.println(ato.getAuthorName() + ", " + ato.getConfName() + ", " + ato.getYear());
+		}
+*/	}
+
+	private void updateAuthorTrendObj(ArrayList<AuthorObj> authors, ArrayList<AuthorTrendObject> authorTrend) {
+		ArrayList<Integer> numYrs = inputObj.getNumYrs();
+		ArrayList<String> confList = inputObj.getConferences();
+
+		for (int j = 0; j < confList.size(); j++) {
+			String conf = confList.get(j);
+			for (int i = 0; i < numYrs.size(); i++) {
+				AuthorTrendObject ato = new AuthorTrendObject();
+				ato.setConfName(conf);
+				int yr = numYrs.get(i);
+				System.out.println("year is " + yr);
+				ato.setYear(yr);
+				int count = 0;
+				for (AuthorObj ao : authors) {
+					if (ao.getYear() == yr) {
+						//System.out.println("First statement passed");
+						String authorConf = ao.getConfName();
+						//System.out.println("authorconference name is: " + authorConf);
+						if (authorConf.equalsIgnoreCase(conf)) {
+							//System.out.println("There's an author! Wew!");
+							count++;
+						}
+					}
+				}
+				ato.setAuthorCount(count);
+				//System.out.println("Author count for conference " + conf + ", in year " + yr + " is: " + count);
+				authorTrend.add(ato);
+			}
 		}
 	}
 
@@ -129,11 +163,12 @@ public class DataHandler {
 			JSONArray authorArr = jo.getJSONArray("authors");
 			for (int i = 0; i < authorArr.length(); i++) {
 				JSONObject ao = authorArr.getJSONObject(i);
-				AuthorObj atobj = new AuthorObj(ao.getString("name"), intYr, confName);
+				AuthorObj atobj = new AuthorObj(intYr, confName, ao.getString("name"));
 				authors.add(atobj);
 			}
 		}
-	}	
+	}
+
 	public static void xmlToJSON(String fileName, ArrayList<String> confArr)
 			throws FileNotFoundException, IOException, UnsupportedEncodingException {
 		// ArrayList<JSONObject> finalDataset = new ArrayList<JSONObject>();
