@@ -12,6 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
@@ -88,39 +91,49 @@ public class DataHandler {
 	}
 
 	private void getAuthorsFOR() throws IOException {
-		// JSONObject test = dataset.get(7);
-		// jsonToTxtFile(test, "test7.json");
-		ArrayList<AuthorTrendObj> authors = new ArrayList<AuthorTrendObj>();
+		ArrayList<AuthorObj> authors = new ArrayList<AuthorObj>();
+		ArrayList<AuthorTrendObject> authorTrend = new ArrayList<AuthorTrendObject>();
 		ArrayList<Integer> numYrs = inputObj.getNumYrs();
-		ArrayList<String> confName = inputObj.getConferences();
-		
-		for (int i = 0; i < numYrs.size(); i++) {
-			Integer integerYr = numYrs.get(i);
-			int intYr = integerYr.intValue();
-			extractAuthors(intYr, authors);
-		}
-		
-		
+		ArrayList<String> confNames = inputObj.getConferences();
 
-		System.out.println("These are the authors: " + authors);
-	}
-
-
-	private void extractAuthors(int intYr, ArrayList<AuthorTrendObj> authors) {
-		for (JSONObject jo : dataset) {
-			if (jo.getInt("year") == intYr && jo.has("authors")) {
-				JSONArray authorArr = jo.getJSONArray("authors");
-				for (int i = 0; i < authorArr.length(); i++) {
-					JSONObject ao = authorArr.getJSONObject(i);
-					AuthorTrendObj atobj = new AuthorTrendObj(ao.getString("name"), intYr);
-					authors.add(atobj);
+		for (String confName : confNames) {
+			for (int i = 0; i < numYrs.size(); i++) {
+				Integer integerYr = numYrs.get(i);
+				int intYr = integerYr.intValue();
+				for (JSONObject jo : dataset) {
+					if (jo.getString("venue").contains(confName) && jo.getInt("year") == intYr) {
+						extractAuthors(intYr, jo, confName, authors);
+					}
 				}
 			}
 		}
-		
+		removeDuplicates(authors);
+		updateAuthorTrendObj(authorTrend);
+		System.out.println("These are the authors (" + authors.size() + ")");
+		for (AuthorObj ato : authors) {
+			System.out.println(ato.getAuthorName() + ", " + ato.getConfName() + ", " + ato.getYear());
+		}
 	}
 
-	
+	private void removeDuplicates(ArrayList<AuthorObj> authors) {
+		List<AuthorObj> al = authors;
+		// add elements to al, including duplicates
+		Set<AuthorObj> hs = new LinkedHashSet<>();
+		hs.addAll(al);
+		al.clear();
+		al.addAll(hs);
+	}
+
+	private void extractAuthors(int intYr, JSONObject jo, String confName, ArrayList<AuthorObj> authors) {
+		if (jo.has("authors")) {
+			JSONArray authorArr = jo.getJSONArray("authors");
+			for (int i = 0; i < authorArr.length(); i++) {
+				JSONObject ao = authorArr.getJSONObject(i);
+				AuthorObj atobj = new AuthorObj(ao.getString("name"), intYr, confName);
+				authors.add(atobj);
+			}
+		}
+	}	
 	public static void xmlToJSON(String fileName, ArrayList<String> confArr)
 			throws FileNotFoundException, IOException, UnsupportedEncodingException {
 		// ArrayList<JSONObject> finalDataset = new ArrayList<JSONObject>();
