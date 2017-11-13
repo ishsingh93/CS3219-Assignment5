@@ -37,14 +37,14 @@ public class UI {
 		String javanLoc = "D:\\CS3219-Assignment5\\CIRApp\\dataset";
 		System.out.println("Ish's data location -> " + ishLoc);
 		System.out.println("Javan's data location -> " + javanLoc);
-		System.out.print("Enter your name: ");
+		System.out.print("Enter your name, if shown here. Otherwise enter the full path of your dataset: ");
 		String loc = sc.nextLine();
 		if (loc.equalsIgnoreCase("ish")) {
 			return ishLoc;
 		} else if (loc.equalsIgnoreCase("javan")) {
 			return javanLoc;
 		} else {
-			return null;
+			return loc;
 		}
 
 	}
