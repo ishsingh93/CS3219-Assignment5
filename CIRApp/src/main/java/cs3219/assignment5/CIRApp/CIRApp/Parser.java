@@ -10,8 +10,8 @@ public class Parser {
 	private static final String COMMA = ",";
 	private static final String DATASET = "dataset=";
 	private static final String DATASETS = "datasets=";
-	private static final String YEAR = "year=";
-	private static final String YEARS = "years=";
+	private static final String YEAR = "year";
+	private static final String YEARS = "years";
 	private static final String CONFERENCE = "conference";
 	private static final String CONFERENCES = "conferences";
 	private static final String VENUE = "venue=";
@@ -33,7 +33,7 @@ public class Parser {
 		// printArr(inputArr);
 		parseQuery(inputArr);
 		inputObj.setDataLocation(dataLoc);
-		InputHandler handler = new InputHandler(inputObj);
+		// InputHandler handler = new InputHandler(inputObj);
 	}
 
 	private void parseQuery(String[] inputArr) {
@@ -114,30 +114,30 @@ public class Parser {
 
 	private void extractConferencesFOR(String[] locArr) {
 		ArrayList<String> confList = new ArrayList<String>();
+		int endIndex = 0;
 		for (int i = 0; i < locArr.length; i++) {
 			if (locArr[i].equalsIgnoreCase(CONFERENCE) || locArr[i].equalsIgnoreCase(CONFERENCES)) {
-				for (int j = i + 1; j < locArr.length; j++) {
-					if (isConference(locArr[j])) {
-						String confName = removeCommas(locArr[j]);
-						confList.add(confName);
+				for (int j = locArr.length - 1; j > i; j--) {
+					if (locArr[j].equalsIgnoreCase(GIVE)) {
+						endIndex = j;
+						break;
 					}
+				}
+				for (int k = i + 1; k < endIndex; k++) {
+					String confName = removeCommas(locArr[k]);
+					confList.add(confName);
 				}
 			}
 		}
+
 		System.out.println("This is the confList: " + confList);
 		inputObj.setConferences(confList);
+
 	}
 
 	private String removeCommas(String string) {
-		if (string.length() == 4) {
-			if (string.charAt(3) == ',') {
-				return string.substring(0, 3);
-			} else {
-				return string;
-			}
-		} else {
-			return string;
-		}
+		String[] confArrWithoutCommas = string.split(",");
+		return confArrWithoutCommas[0];
 	}
 
 	private boolean isConference(String string) {
@@ -166,10 +166,11 @@ public class Parser {
 		ArrayList<Integer> numList = new ArrayList<Integer>();
 		for (int i = 0; i < inputArr.length; i++) {
 			if (inputArr[i].equalsIgnoreCase(YEAR) || inputArr[i].equalsIgnoreCase(YEARS)) {
+				// If only one year
 				if (i + 1 == inputArr.length) {
-					int yr = Integer.valueOf(inputArr[i + 1]);
-					numList.add(Integer.valueOf(yr));
-				} else {
+					Integer yr = Integer.valueOf(inputArr[i + 1]);
+					numList.add(yr);
+				} else { // If more than one year
 					String[] yrRange = inputArr[i + 1].split(DASH);
 					int startYr = Integer.valueOf(yrRange[0]);
 					int endYr = Integer.valueOf(yrRange[1]);
@@ -181,6 +182,7 @@ public class Parser {
 			}
 		}
 		inputObj.setNumYrs(numList);
+		System.out.println("List of years is: " + numList);
 	}
 
 	private void extractAuthors(String[] locArr) {
