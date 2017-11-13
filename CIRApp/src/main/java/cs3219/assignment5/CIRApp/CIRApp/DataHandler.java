@@ -90,8 +90,15 @@ public class DataHandler {
 	private void getAuthorsFOR() throws IOException {
 		// JSONObject test = dataset.get(7);
 		// jsonToTxtFile(test, "test7.json");
-		ArrayList<String> authors = new ArrayList<String>();
+		ArrayList<AuthorTrendObj> authors = new ArrayList<AuthorTrendObj>();
 		ArrayList<Integer> numYrs = inputObj.getNumYrs();
+		ArrayList<String> confName = inputObj.getConferences();
+		
+		for (int i = 0; i < numYrs.size(); i++) {
+			Integer integerYr = numYrs.get(i);
+			int intYr = integerYr.intValue();
+			extractAuthors(intYr, authors);
+		}
 		
 		
 
@@ -99,17 +106,21 @@ public class DataHandler {
 	}
 
 
-	private JSONObject getAuthorObjFromJSONArray(JSONArray b) {
-		for (int i = 0; i < b.length(); i++) {
-			JSONObject test = b.getJSONObject(i);
-			String section = test.getString("name");
-			if (section.equalsIgnoreCase("SectLabel")) {
-				return b.getJSONObject(i);
+	private void extractAuthors(int intYr, ArrayList<AuthorTrendObj> authors) {
+		for (JSONObject jo : dataset) {
+			if (jo.getInt("year") == intYr && jo.has("authors")) {
+				JSONArray authorArr = jo.getJSONArray("authors");
+				for (int i = 0; i < authorArr.length(); i++) {
+					JSONObject ao = authorArr.getJSONObject(i);
+					AuthorTrendObj atobj = new AuthorTrendObj(ao.getString("name"), intYr);
+					authors.add(atobj);
+				}
 			}
 		}
-		return null;
+		
 	}
 
+	
 	public static void xmlToJSON(String fileName, ArrayList<String> confArr)
 			throws FileNotFoundException, IOException, UnsupportedEncodingException {
 		// ArrayList<JSONObject> finalDataset = new ArrayList<JSONObject>();
