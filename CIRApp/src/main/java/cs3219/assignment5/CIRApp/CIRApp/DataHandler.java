@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,7 +69,7 @@ public class DataHandler {
 			if (queryCommand.equalsIgnoreCase("for")) {
 				getAuthorsFOR();
 			} else {
-				// getAuthorsTOP();
+				getAuthorsTOP();
 			}
 			System.out.println("author trend executed");
 			break;
@@ -90,26 +91,133 @@ public class DataHandler {
 
 	}
 
+
+	private void getAuthorsTOP() {
+		String[] searchLocArr = inputObj.getSearchLoc().split(" ");
+		
+		switch (searchLocArr[0]) {
+		case "conference":
+			ArrayList<String> topAuthorsConf = topAuthorsFromConf(searchLocArr);
+			for (int topAuthorSize = 0; topAuthorSize < inputObj.getNum(); topAuthorSize++) {
+				System.out.println(topAuthorsConf.get(topAuthorSize));
+			}
+			break;
+		case "year":
+			ArrayList<String> topAuthorsYr = topAuthorsFromYr(searchLocArr);
+			for (int topAuthorSize = 0; topAuthorSize < inputObj.getNum(); topAuthorSize++) {
+				System.out.println(topAuthorsYr.get(topAuthorSize));
+			}
+			break;
+		case "years":
+			
+			break;
+		default:
+			break;
+		}
+		
+	}
+
+	private ArrayList<String> topAuthorsFromYr(String[] searchLocArr) {
+		String yearStr = searchLocArr[1];
+		int yearInt = Integer.parseInt(yearStr);
+		ArrayList<AuthorObj> aoArr = new ArrayList<AuthorObj>();
+		for (JSONObject jo : dataset) {
+			if (jo.has("year") && jo.getInt("year") == yearInt) {
+				JSONArray authorArr = jo.getJSONArray("authors");
+				for (int j = 0; j < authorArr.length(); j++) {
+					JSONObject author = authorArr.getJSONObject(j);
+					String authorName = author.getString("name");
+					if (aoArrHasAuthor(authorName, aoArr)) {
+						incrementAuthorCount(authorName, aoArr);
+					} else {
+						AuthorObj newAuthor = new AuthorObj();
+						newAuthor.setAuthorName(authorName);
+						newAuthor.setCount(1);
+						aoArr.add(newAuthor);
+					}
+				}
+			}
+		} 
+		
+		System.out.println("Size of authorArr = " + aoArr.size());
+		sortArrListDescending(aoArr);
+		System.out.println("Size of authorArr = " + aoArr.size());
+		//output.writeCSVFileAuthor("authors", aoArr, numTop, inputObj.getDataLocation());
+		ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
+		return nameArr;
+	}
+
+	private ArrayList<String> topAuthorsFromConf(String[] searchLocArr) {
+		String conf = searchLocArr[1];
+		ArrayList<AuthorObj> aoArr = new ArrayList<AuthorObj>();
+		for (JSONObject jo : dataset) {
+			if (jo.getString("venue").equalsIgnoreCase(conf)) {
+				JSONArray authorArr = jo.getJSONArray("authors");
+				for (int j = 0; j < authorArr.length(); j++) {
+					JSONObject author = authorArr.getJSONObject(j);
+					String authorName = author.getString("name");
+					if (aoArrHasAuthor(authorName, aoArr)) {
+						incrementAuthorCount(authorName, aoArr);
+					} else {
+						AuthorObj newAuthor = new AuthorObj();
+						newAuthor.setAuthorName(authorName);
+						newAuthor.setCount(1);
+						aoArr.add(newAuthor);
+					}
+				}
+			}
+		}
+		System.out.println("Size of authorArr = " + aoArr.size());
+		sortArrListDescending(aoArr);
+		System.out.println("Size of authorArr = " + aoArr.size());
+		//output.writeCSVFileAuthor("authors", aoArr, numTop, inputObj.getDataLocation());
+		ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
+		return nameArr;
+	}
+	
+	private ArrayList<String> extractAuthorNamesFromAoArr(ArrayList<AuthorObj> aoArr, int numTop) {
+		ArrayList<String> topAuthArr = new ArrayList<String>();
+		if (!aoArr.isEmpty()) {
+			for (int authIndex = 0; authIndex < numTop; authIndex++) {
+				String topAuthor = aoArr.get(authIndex).getAuthorName();
+				topAuthArr.add(topAuthor);
+			}
+		}
+		return topAuthArr;
+	}
+	
+	private void sortArrListDescending(ArrayList<AuthorObj> aoArr) {
+		Collections.sort(aoArr, AuthorObj.authorCount);
+	}
+
+	private boolean aoArrHasAuthor(String authorName, ArrayList<AuthorObj> aoArr) {
+		boolean hasAuthor = false;
+		for (AuthorObj ao : aoArr) {
+			if (ao.getAuthorName().equalsIgnoreCase(authorName)) {
+				hasAuthor = true;
+			} else {
+				hasAuthor = false;
+			}
+		}
+		return hasAuthor;
+	}
+	
+	private void incrementAuthorCount(String authorName, ArrayList<AuthorObj> aoArr) {
+		for (AuthorObj ao : aoArr) {
+			if (ao.getAuthorName().equalsIgnoreCase(authorName)) {
+				ao.setCount(ao.getCount() + 1);
+				System.out.println("duplicate found : " + ao.getAuthorName());
+			}
+		}
+	}
+	
 	private void getAuthorsFOR() throws IOException {
 		ArrayList<AuthorObj> authors = new ArrayList<AuthorObj>();
 		ArrayList<AuthorTrendObject> authorTrend = new ArrayList<AuthorTrendObject>();
 		ArrayList<Integer> numYrs = inputObj.getNumYrs();
 		ArrayList<String> confNames = inputObj.getConferences();
-		int count = 0;
 
-		for (String confName : confNames) {
-			for (int i = 0; i < numYrs.size(); i++) {
-				Integer integerYr = numYrs.get(i);
-				int intYr = integerYr.intValue();
-				for (JSONObject jo : dataset) {
-					if (jo.getString("venue").contains(confName) && jo.getInt("year") == intYr) {
-						extractAuthors(intYr, jo, confName, authors);
-						count++;
-					}
-				}
-
-			}
-		}
+		authorsToAuthorObj(authors, numYrs, confNames);
 		removeDuplicates(authors);
 		updateAuthorTrendObj(authors, authorTrend);
 		System.out.println("These are the authors (" + authors.size() + ")");
@@ -117,6 +225,22 @@ public class DataHandler {
 			System.out.println(ato.getAuthorName() + ", " + ato.getConfName() + ", " + ato.getYear());
 		}
 */	}
+
+	private void authorsToAuthorObj(ArrayList<AuthorObj> authors, ArrayList<Integer> numYrs,
+			ArrayList<String> confNames) {
+		for (String confName : confNames) {
+			for (int i = 0; i < numYrs.size(); i++) {
+				Integer integerYr = numYrs.get(i);
+				int intYr = integerYr.intValue();
+				for (JSONObject jo : dataset) {
+					if (jo.getString("venue").contains(confName) && jo.getInt("year") == intYr) {
+						extractAuthors(intYr, jo, confName, authors);
+					}
+				}
+
+			}
+		}
+	}
 
 	private void updateAuthorTrendObj(ArrayList<AuthorObj> authors, ArrayList<AuthorTrendObject> authorTrend) {
 		ArrayList<Integer> numYrs = inputObj.getNumYrs();
@@ -128,7 +252,7 @@ public class DataHandler {
 				AuthorTrendObject ato = new AuthorTrendObject();
 				ato.setConfName(conf);
 				int yr = numYrs.get(i);
-				System.out.println("year is " + yr);
+				//System.out.println("year is " + yr);
 				ato.setYear(yr);
 				int count = 0;
 				for (AuthorObj ao : authors) {
@@ -163,7 +287,10 @@ public class DataHandler {
 			JSONArray authorArr = jo.getJSONArray("authors");
 			for (int i = 0; i < authorArr.length(); i++) {
 				JSONObject ao = authorArr.getJSONObject(i);
-				AuthorObj atobj = new AuthorObj(intYr, confName, ao.getString("name"));
+				AuthorObj atobj = new AuthorObj();
+				atobj.setAuthorName(ao.getString("name"));
+				atobj.setConfName(confName);
+				atobj.setYear(intYr);
 				authors.add(atobj);
 			}
 		}

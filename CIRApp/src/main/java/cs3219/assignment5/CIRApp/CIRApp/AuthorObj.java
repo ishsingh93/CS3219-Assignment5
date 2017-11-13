@@ -1,15 +1,17 @@
 package cs3219.assignment5.CIRApp.CIRApp;
 
+import java.util.Comparator;
+
+
 public class AuthorObj {
-	
+
 	private int year;
 	private String confName;
 	private String authorName;
-	
-	public AuthorObj(int year, String confName, String authorName) {
-		setYear(year);
-		setConfName(confName);
-		setAuthorName(authorName);
+	private int count;
+
+	public AuthorObj() {
+		
 	}
 
 	public int getYear() {
@@ -35,4 +37,24 @@ public class AuthorObj {
 	public void setAuthorName(String authorName) {
 		this.authorName = authorName;
 	}
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
+
+	public static Comparator<AuthorObj> authorCount = new Comparator<AuthorObj>() {
+
+		public int compare(AuthorObj au1, AuthorObj au2) {
+
+			int auCount1 = au1.getCount();
+			int auCount2 = au2.getCount();
+
+			/* For descending order */
+			return auCount2 - auCount1;
+		}
+	};
 }
