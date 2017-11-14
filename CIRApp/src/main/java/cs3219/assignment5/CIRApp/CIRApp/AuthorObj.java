@@ -8,6 +8,7 @@ public class AuthorObj {
 	private int year;
 	private String confName;
 	private String authorName;
+	private long authorID;
 	private int count;
 
 	public AuthorObj() {
@@ -44,6 +45,14 @@ public class AuthorObj {
 
 	public void setCount(int count) {
 		this.count = count;
+	}
+
+	public long getAuthorID() {
+		return authorID;
+	}
+
+	public void setAuthorID(long authorID) {
+		this.authorID = authorID;
 	}
 
 	public static Comparator<AuthorObj> authorCount = new Comparator<AuthorObj>() {

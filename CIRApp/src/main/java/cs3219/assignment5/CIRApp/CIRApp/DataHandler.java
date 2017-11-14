@@ -62,7 +62,7 @@ public class DataHandler {
 			if (queryCommand.equalsIgnoreCase("for")) {
 				getCitedDocumentsFOR();
 			} else {
-				// getCitedDocumentsTOP();
+				getTOP(queryType);
 			}
 			System.out.println("cited document trend executed");
 			break;
@@ -70,7 +70,7 @@ public class DataHandler {
 			if (queryCommand.equalsIgnoreCase("for")) {
 				getAuthorsFOR();
 			} else {
-				getAuthorsTOP();
+				getTOP(queryType);
 			}
 			System.out.println("author trend executed");
 			break;
@@ -91,7 +91,6 @@ public class DataHandler {
 		}
 
 	}
-
 
 	private void getCitedDocumentsFOR() {
 		ArrayList<CitTrendObj> citations = new ArrayList<CitTrendObj>();
@@ -137,32 +136,112 @@ public class DataHandler {
 		}
 	}
 
-	private void getAuthorsTOP() {
+	private void getTOP(String searchTerm) {
 		String[] searchLocArr = inputObj.getSearchLoc().split(" ");
 		
-		switch (searchLocArr[0]) {
-		case "conference":
-			ArrayList<String> topAuthorsConf = topAuthorsFromConf(searchLocArr);
-			for (int topAuthorSize = 0; topAuthorSize < inputObj.getNum(); topAuthorSize++) {
-				System.out.println(topAuthorsConf.get(topAuthorSize));
+		if (searchTerm.equalsIgnoreCase("authors")) {
+			switch (searchLocArr[0]) {
+			case "conference":
+				ArrayList<AuthorObj> topAuthorsConf = topAuthorsFromConf(searchLocArr);
+				System.out.println("Top authors for conference : ");
+				for (int topAuthorsSize = 0; topAuthorsSize < inputObj.getNum(); topAuthorsSize++) {
+					AuthorObj topAuthor = topAuthorsConf.get(topAuthorsSize);
+					int order = topAuthorsSize + 1;
+					System.out.println(order + ". " + topAuthor.getAuthorName() + " - " + topAuthor.getCount() + " times. ");
+				}
+				break;
+			case "year":
+				ArrayList<AuthorObj> topAuthorsYr = topAuthorsFromYr(searchLocArr);
+				System.out.println("Top authors for year : ");
+				for (int topAuthorsSize = 0; topAuthorsSize < inputObj.getNum(); topAuthorsSize++) {
+					AuthorObj topAuthor = topAuthorsYr.get(topAuthorsSize);
+					int order = topAuthorsSize + 1;
+					System.out.println(order + ". " + topAuthor.getAuthorName() + " - " + topAuthor.getCount() + " times. ");
+				}
+				break;
+			case "years":
+				
+				break;
+			default:
+				break;
 			}
-			break;
-		case "year":
-			ArrayList<String> topAuthorsYr = topAuthorsFromYr(searchLocArr);
-			for (int topAuthorSize = 0; topAuthorSize < inputObj.getNum(); topAuthorSize++) {
-				System.out.println(topAuthorsYr.get(topAuthorSize));
-			}
-			break;
-		case "years":
-			
-			break;
-		default:
-			break;
 		}
 		
+		else if (searchTerm.equalsIgnoreCase("cited documents")) {
+			switch (searchLocArr[0]) {
+			case "conference":
+				ArrayList<CitedDocObj> topCitedDocConf = topCitedDocFromConf(searchLocArr);
+				System.out.println("Top cited documents for conference : ");
+				for (int topCitedDocSize = 0; topCitedDocSize < inputObj.getNum(); topCitedDocSize++) {
+					CitedDocObj topCitedDoc = topCitedDocConf.get(topCitedDocSize);
+					int order = topCitedDocSize + 1;
+					System.out.println(order + ". " + topCitedDoc.getDocName() + " - " + topCitedDoc.getCitedCount() + " times. ");
+				}
+				break;
+			case "year":
+				ArrayList<CitedDocObj> topCitedDocYr = topCitedDocFromYr(searchLocArr);
+				System.out.println("Top cited documents for year : ");
+				for (int topCitedDocSize = 0; topCitedDocSize < inputObj.getNum(); topCitedDocSize++) {
+					CitedDocObj topCitedDoc = topCitedDocYr.get(topCitedDocSize);
+					int order = topCitedDocSize + 1;
+					System.out.println(order + ". " + topCitedDoc.getDocName() + " - " + topCitedDoc.getCitedCount() + " times. ");
+				}
+				break;
+			case "years":
+				
+				break;
+			default:
+				break;
+			}
+		}
+	}
+		
+	private ArrayList<CitedDocObj> topCitedDocFromYr(String[] searchLocArr) {
+		String yr = searchLocArr[1];
+		int specifiedYear = Integer.valueOf(yr);
+		ArrayList<CitedDocObj> citedArr = new ArrayList<CitedDocObj>();
+		for (JSONObject jo : dataset) {
+			if (jo.has("year")) {
+				if (jo.getInt("year") == specifiedYear) {
+					String paperTitle = jo.getString("title");
+					JSONArray inCitedArr = jo.getJSONArray("inCitations");
+					int inCitedCount = inCitedArr.length();
+					CitedDocObj citedDoc = new CitedDocObj();
+					citedDoc.setCitedCount(inCitedCount);
+					citedDoc.setDocName(paperTitle);
+					//citedDoc.setCitedYr(specifiedYear);
+					citedArr.add(citedDoc);
+				}
+			}
+			sortCitedDocs(citedArr);
+		}
+		return citedArr;
 	}
 
-	private ArrayList<String> topAuthorsFromYr(String[] searchLocArr) {
+	private ArrayList<CitedDocObj> topCitedDocFromConf(String[] searchLocArr) {
+		String conf = searchLocArr[1];
+		ArrayList<CitedDocObj> citedArr = new ArrayList<CitedDocObj>();
+		for (JSONObject jo : dataset) {
+			if (jo.getString("venue").equalsIgnoreCase(conf)) {
+				String paperTitle = jo.getString("title");
+				JSONArray inCitedArr = jo.getJSONArray("inCitations");
+				int inCitedCount = inCitedArr.length();
+				CitedDocObj citedDoc = new CitedDocObj();
+				citedDoc.setCitedCount(inCitedCount);
+				citedDoc.setDocName(paperTitle);
+				//citedDoc.setConfName(conf);
+				citedArr.add(citedDoc);
+			}
+			sortCitedDocs(citedArr);
+		}
+		return citedArr;
+	}
+
+	private void sortCitedDocs(ArrayList<CitedDocObj> citedArr) {
+		Collections.sort(citedArr, CitedDocObj.topDocCounter);
+	}
+
+	private ArrayList<AuthorObj> topAuthorsFromYr(String[] searchLocArr) {
 		String yearStr = searchLocArr[1];
 		int yearInt = Integer.parseInt(yearStr);
 		ArrayList<AuthorObj> aoArr = new ArrayList<AuthorObj>();
@@ -172,6 +251,7 @@ public class DataHandler {
 				for (int j = 0; j < authorArr.length(); j++) {
 					JSONObject author = authorArr.getJSONObject(j);
 					String authorName = author.getString("name");
+
 					if (aoArrHasAuthor(authorName, aoArr)) {
 						incrementAuthorCount(authorName, aoArr);
 					} else {
@@ -179,20 +259,19 @@ public class DataHandler {
 						newAuthor.setAuthorName(authorName);
 						newAuthor.setCount(1);
 						aoArr.add(newAuthor);
-					}
+					} 
 				}
 			}
 		} 
 		
-		System.out.println("Size of authorArr = " + aoArr.size());
-		sortArrListDescending(aoArr);
-		System.out.println("Size of authorArr = " + aoArr.size());
+		//System.out.println("Size of authorArr = " + aoArr.size());
+		sortAuthorArr(aoArr);
 		//output.writeCSVFileAuthor("authors", aoArr, numTop, inputObj.getDataLocation());
-		ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
-		return nameArr;
+		//ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
+		return aoArr;
 	}
 
-	private ArrayList<String> topAuthorsFromConf(String[] searchLocArr) {
+	private ArrayList<AuthorObj> topAuthorsFromConf(String[] searchLocArr) {
 		String conf = searchLocArr[1];
 		ArrayList<AuthorObj> aoArr = new ArrayList<AuthorObj>();
 		for (JSONObject jo : dataset) {
@@ -201,6 +280,7 @@ public class DataHandler {
 				for (int j = 0; j < authorArr.length(); j++) {
 					JSONObject author = authorArr.getJSONObject(j);
 					String authorName = author.getString("name");
+					
 					if (aoArrHasAuthor(authorName, aoArr)) {
 						incrementAuthorCount(authorName, aoArr);
 					} else {
@@ -213,14 +293,13 @@ public class DataHandler {
 			}
 		}
 		System.out.println("Size of authorArr = " + aoArr.size());
-		sortArrListDescending(aoArr);
-		System.out.println("Size of authorArr = " + aoArr.size());
+		sortAuthorArr(aoArr);
 		//output.writeCSVFileAuthor("authors", aoArr, numTop, inputObj.getDataLocation());
-		ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
-		return nameArr;
+		//ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
+		return aoArr;
 	}
 	
-	private ArrayList<String> extractAuthorNamesFromAoArr(ArrayList<AuthorObj> aoArr, int numTop) {
+	/*private ArrayList<String> extractAuthorNamesFromAoArr(ArrayList<AuthorObj> aoArr, int numTop) {
 		ArrayList<String> topAuthArr = new ArrayList<String>();
 		if (!aoArr.isEmpty()) {
 			for (int authIndex = 0; authIndex < numTop; authIndex++) {
@@ -229,9 +308,9 @@ public class DataHandler {
 			}
 		}
 		return topAuthArr;
-	}
+	}*/
 	
-	private void sortArrListDescending(ArrayList<AuthorObj> aoArr) {
+	private void sortAuthorArr(ArrayList<AuthorObj> aoArr) {
 		Collections.sort(aoArr, AuthorObj.authorCount);
 	}
 

@@ -44,12 +44,15 @@ public class Parser {
 			extractYearsFOR(inputArr);
 		}
 
-		if (inputArr[0].equalsIgnoreCase(TOP)) {
+		else if (inputArr[0].equalsIgnoreCase(TOP)) {
 			extractNumber(inputArr);
 			extractSearchContent(inputArr);
 			extractSearchLoc(inputArr);
 		}
-
+		
+		else {
+			System.out.println("Please enter a valid query");
+		}
 	}
 
 	private void extractNumber(String[] inputArr) {

@@ -2,8 +2,6 @@ package cs3219.assignment5.CIRApp.CIRApp;
 
 import java.util.Comparator;
 
-import assignment3_CIR.app.AuthorObj;
-
 public class CitTrendObj {
 
 	private int year;
