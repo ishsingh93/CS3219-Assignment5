@@ -33,7 +33,6 @@ public class DataHandler {
 
 	public DataHandler(Input input) throws IOException {
 		this.setInputObj(input);
-		//xmlToJSON(inputObj.getDataLocation(), inputObj.getConferences());
 		parseJSONFileIntoObjArrList();
 		execute();
 	}
@@ -45,9 +44,7 @@ public class DataHandler {
 			ArrayList<String> jsonTxt = (ArrayList<String>) IOUtils.readLines(is, "UTF-8");
 			for (String i : jsonTxt) {
 				JSONObject jo = new JSONObject(i);
-				// FileManager.jsonToTxtFile(jo, "data"+ jsonTxt.indexOf(i) + ".json");
 				dataset.add(jo);
-				// System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
 			}
 		}
 		System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
@@ -62,14 +59,18 @@ public class DataHandler {
 
 		switch (queryType) {
 		case "cited documents": // cited documents trend
-
+			if (queryCommand.equalsIgnoreCase("for")) {
+				getCitedDocumentsFOR();
+			} else {
+				getTOP(queryType);
+			}
 			System.out.println("cited document trend executed");
 			break;
 		case "authors": // author trend
 			if (queryCommand.equalsIgnoreCase("for")) {
 				getAuthorsFOR();
 			} else {
-				getAuthorsTOP();
+				getTOP(queryType);
 			}
 			System.out.println("author trend executed");
 			break;
@@ -91,33 +92,156 @@ public class DataHandler {
 
 	}
 
-
-	private void getAuthorsTOP() {
-		String[] searchLocArr = inputObj.getSearchLoc().split(" ");
+	private void getCitedDocumentsFOR() {
+		ArrayList<CitTrendObj> citations = new ArrayList<CitTrendObj>();
+		ArrayList<Integer> numYrs = inputObj.getNumYrs();
+		ArrayList<String> confNames = inputObj.getConferences();
 		
-		switch (searchLocArr[0]) {
-		case "conference":
-			ArrayList<String> topAuthorsConf = topAuthorsFromConf(searchLocArr);
-			for (int topAuthorSize = 0; topAuthorSize < inputObj.getNum(); topAuthorSize++) {
-				System.out.println(topAuthorsConf.get(topAuthorSize));
+		for (String confName : confNames) {
+			for (JSONObject jo : dataset) {
+				if (jo.getString("venue").contains(confName) && jo.has("year")) {
+					extractCitedDocuments(numYrs, jo, confName, citations);
+				}
 			}
-			break;
-		case "year":
-			ArrayList<String> topAuthorsYr = topAuthorsFromYr(searchLocArr);
-			for (int topAuthorSize = 0; topAuthorSize < inputObj.getNum(); topAuthorSize++) {
-				System.out.println(topAuthorsYr.get(topAuthorSize));
-			}
-			break;
-		case "years":
-			
-			break;
-		default:
-			break;
 		}
 		
+		System.out.println("These are the number of citations per year " + "(" + citations.size() + ")");
+		for (CitTrendObj citOb : citations) {
+			System.out.println(citOb.getConference() + ", " + citOb.getYear() + ", " + citOb.getNumCitations());
+		}
 	}
 
-	private ArrayList<String> topAuthorsFromYr(String[] searchLocArr) {
+	private void extractCitedDocuments(ArrayList<Integer> numYrs, JSONObject jo, String confName, ArrayList<CitTrendObj> citations) {
+		int jsonYr = jo.getInt("year");
+		int yrRange = numYrs.size();
+		int numCitations = jo.getJSONArray("inCitations").length();
+		if (numYrs.get(0) < jsonYr && jsonYr < numYrs.get(yrRange - 1)) { //within the range specified by the user
+			if (citations.size() == 0) { //add element into new array to avoid IndexOutOfBoundException
+				citations.add(new CitTrendObj(jsonYr, numCitations, confName));
+			}
+			else {
+				for (int j=0; j< citations.size(); j++) {
+					if (citations.get(j).getYear() == jsonYr && citations.get(j).getConference().contains(confName)) {
+						citations.get(j).setNumCitations(citations.get(j).getNumCitations() + numCitations);
+						break;
+					} 
+					
+					if (j == citations.size() - 1 && numCitations != 0) {
+						CitTrendObj citationYear = new CitTrendObj(jsonYr, numCitations, confName);
+						citations.add(citationYear);									
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	private void getTOP(String searchTerm) {
+		String[] searchLocArr = inputObj.getSearchLoc().split(" ");
+		
+		if (searchTerm.equalsIgnoreCase("authors")) {
+			switch (searchLocArr[0]) {
+			case "conference":
+				ArrayList<AuthorObj> topAuthorsConf = topAuthorsFromConf(searchLocArr);
+				System.out.println("Top authors for conference : ");
+				for (int topAuthorsSize = 0; topAuthorsSize < inputObj.getNum(); topAuthorsSize++) {
+					AuthorObj topAuthor = topAuthorsConf.get(topAuthorsSize);
+					int order = topAuthorsSize + 1;
+					System.out.println(order + ". " + topAuthor.getAuthorName() + " - " + topAuthor.getCount() + " times. ");
+				}
+				break;
+			case "year":
+				ArrayList<AuthorObj> topAuthorsYr = topAuthorsFromYr(searchLocArr);
+				System.out.println("Top authors for year : ");
+				for (int topAuthorsSize = 0; topAuthorsSize < inputObj.getNum(); topAuthorsSize++) {
+					AuthorObj topAuthor = topAuthorsYr.get(topAuthorsSize);
+					int order = topAuthorsSize + 1;
+					System.out.println(order + ". " + topAuthor.getAuthorName() + " - " + topAuthor.getCount() + " times. ");
+				}
+				break;
+			case "years":
+				
+				break;
+			default:
+				break;
+			}
+		}
+		
+		else if (searchTerm.equalsIgnoreCase("cited documents")) {
+			switch (searchLocArr[0]) {
+			case "conference":
+				ArrayList<CitedDocObj> topCitedDocConf = topCitedDocFromConf(searchLocArr);
+				System.out.println("Top cited documents for conference : ");
+				for (int topCitedDocSize = 0; topCitedDocSize < inputObj.getNum(); topCitedDocSize++) {
+					CitedDocObj topCitedDoc = topCitedDocConf.get(topCitedDocSize);
+					int order = topCitedDocSize + 1;
+					System.out.println(order + ". " + topCitedDoc.getDocName() + " - " + topCitedDoc.getCitedCount() + " times. ");
+				}
+				break;
+			case "year":
+				ArrayList<CitedDocObj> topCitedDocYr = topCitedDocFromYr(searchLocArr);
+				System.out.println("Top cited documents for year : ");
+				for (int topCitedDocSize = 0; topCitedDocSize < inputObj.getNum(); topCitedDocSize++) {
+					CitedDocObj topCitedDoc = topCitedDocYr.get(topCitedDocSize);
+					int order = topCitedDocSize + 1;
+					System.out.println(order + ". " + topCitedDoc.getDocName() + " - " + topCitedDoc.getCitedCount() + " times. ");
+				}
+				break;
+			case "years":
+				
+				break;
+			default:
+				break;
+			}
+		}
+	}
+		
+	private ArrayList<CitedDocObj> topCitedDocFromYr(String[] searchLocArr) {
+		String yr = searchLocArr[1];
+		int specifiedYear = Integer.valueOf(yr);
+		ArrayList<CitedDocObj> citedArr = new ArrayList<CitedDocObj>();
+		for (JSONObject jo : dataset) {
+			if (jo.has("year")) {
+				if (jo.getInt("year") == specifiedYear) {
+					String paperTitle = jo.getString("title");
+					JSONArray inCitedArr = jo.getJSONArray("inCitations");
+					int inCitedCount = inCitedArr.length();
+					CitedDocObj citedDoc = new CitedDocObj();
+					citedDoc.setCitedCount(inCitedCount);
+					citedDoc.setDocName(paperTitle);
+					//citedDoc.setCitedYr(specifiedYear);
+					citedArr.add(citedDoc);
+				}
+			}
+			sortCitedDocs(citedArr);
+		}
+		return citedArr;
+	}
+
+	private ArrayList<CitedDocObj> topCitedDocFromConf(String[] searchLocArr) {
+		String conf = searchLocArr[1];
+		ArrayList<CitedDocObj> citedArr = new ArrayList<CitedDocObj>();
+		for (JSONObject jo : dataset) {
+			if (jo.getString("venue").equalsIgnoreCase(conf)) {
+				String paperTitle = jo.getString("title");
+				JSONArray inCitedArr = jo.getJSONArray("inCitations");
+				int inCitedCount = inCitedArr.length();
+				CitedDocObj citedDoc = new CitedDocObj();
+				citedDoc.setCitedCount(inCitedCount);
+				citedDoc.setDocName(paperTitle);
+				//citedDoc.setConfName(conf);
+				citedArr.add(citedDoc);
+			}
+			sortCitedDocs(citedArr);
+		}
+		return citedArr;
+	}
+
+	private void sortCitedDocs(ArrayList<CitedDocObj> citedArr) {
+		Collections.sort(citedArr, CitedDocObj.topDocCounter);
+	}
+
+	private ArrayList<AuthorObj> topAuthorsFromYr(String[] searchLocArr) {
 		String yearStr = searchLocArr[1];
 		int yearInt = Integer.parseInt(yearStr);
 		ArrayList<AuthorObj> aoArr = new ArrayList<AuthorObj>();
@@ -127,6 +251,7 @@ public class DataHandler {
 				for (int j = 0; j < authorArr.length(); j++) {
 					JSONObject author = authorArr.getJSONObject(j);
 					String authorName = author.getString("name");
+
 					if (aoArrHasAuthor(authorName, aoArr)) {
 						incrementAuthorCount(authorName, aoArr);
 					} else {
@@ -134,20 +259,19 @@ public class DataHandler {
 						newAuthor.setAuthorName(authorName);
 						newAuthor.setCount(1);
 						aoArr.add(newAuthor);
-					}
+					} 
 				}
 			}
 		} 
 		
-		System.out.println("Size of authorArr = " + aoArr.size());
-		sortArrListDescending(aoArr);
-		System.out.println("Size of authorArr = " + aoArr.size());
+		//System.out.println("Size of authorArr = " + aoArr.size());
+		sortAuthorArr(aoArr);
 		//output.writeCSVFileAuthor("authors", aoArr, numTop, inputObj.getDataLocation());
-		ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
-		return nameArr;
+		//ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
+		return aoArr;
 	}
 
-	private ArrayList<String> topAuthorsFromConf(String[] searchLocArr) {
+	private ArrayList<AuthorObj> topAuthorsFromConf(String[] searchLocArr) {
 		String conf = searchLocArr[1];
 		ArrayList<AuthorObj> aoArr = new ArrayList<AuthorObj>();
 		for (JSONObject jo : dataset) {
@@ -156,6 +280,7 @@ public class DataHandler {
 				for (int j = 0; j < authorArr.length(); j++) {
 					JSONObject author = authorArr.getJSONObject(j);
 					String authorName = author.getString("name");
+					
 					if (aoArrHasAuthor(authorName, aoArr)) {
 						incrementAuthorCount(authorName, aoArr);
 					} else {
@@ -168,14 +293,13 @@ public class DataHandler {
 			}
 		}
 		System.out.println("Size of authorArr = " + aoArr.size());
-		sortArrListDescending(aoArr);
-		System.out.println("Size of authorArr = " + aoArr.size());
+		sortAuthorArr(aoArr);
 		//output.writeCSVFileAuthor("authors", aoArr, numTop, inputObj.getDataLocation());
-		ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
-		return nameArr;
+		//ArrayList<String> nameArr = extractAuthorNamesFromAoArr(aoArr, inputObj.getNum());
+		return aoArr;
 	}
 	
-	private ArrayList<String> extractAuthorNamesFromAoArr(ArrayList<AuthorObj> aoArr, int numTop) {
+	/*private ArrayList<String> extractAuthorNamesFromAoArr(ArrayList<AuthorObj> aoArr, int numTop) {
 		ArrayList<String> topAuthArr = new ArrayList<String>();
 		if (!aoArr.isEmpty()) {
 			for (int authIndex = 0; authIndex < numTop; authIndex++) {
@@ -184,9 +308,9 @@ public class DataHandler {
 			}
 		}
 		return topAuthArr;
-	}
+	}*/
 	
-	private void sortArrListDescending(ArrayList<AuthorObj> aoArr) {
+	private void sortAuthorArr(ArrayList<AuthorObj> aoArr) {
 		Collections.sort(aoArr, AuthorObj.authorCount);
 	}
 
@@ -296,54 +420,14 @@ public class DataHandler {
 		}
 	}
 
-	public static void xmlToJSON(String fileName, ArrayList<String> confArr)
-			throws FileNotFoundException, IOException, UnsupportedEncodingException {
-		// ArrayList<JSONObject> finalDataset = new ArrayList<JSONObject>();
-		for (int i = 0; i < confArr.size(); i++) {
-			Path fullPath = Paths.get(fileName + "\\" + confArr.get(i).toString() + "\\"
-					+ confArr.get(i).substring(0, 1) + "\\" + confArr.get(i).toString());
-
-			if (Files.isDirectory(fullPath)) {
-				try (DirectoryStream<Path> files = Files.newDirectoryStream(fullPath)) {
-					for (Path file : files) {
-						if (Files.isRegularFile(file) || Files.isSymbolicLink(file)) {
-							File xmlFile = new File(file.toString());
-							FileInputStream fin = new FileInputStream(xmlFile);
-							byte[] xmlData = new byte[(int) xmlFile.length()];
-							fin.read(xmlData);
-							fin.close();
-							TEST_XML_STRING = new String(xmlData, "UTF-8");
-							JSONObject xmlJSONObj = new JSONObject();
-
-							try {
-								xmlJSONObj = XML.toJSONObject(TEST_XML_STRING);
-								dataset.add(xmlJSONObj);
-							} catch (JSONException e) {
-								System.out.println(e.toString());
-							}
-						}
-					}
-				}
-			} else {
-				System.out.println(fullPath.toString() + "is not a directory");
-			}
-
-		}
-		System.out.println("Number of JSON Objects : " + dataset.size());
-		// System.out.println(dataset.get(0).toString());
-		// jsonToTxtFile(dataset.get(0), "jsonOutput");
-	}
-
 	public static void jsonToTxtFile(JSONObject xmlJSONObj, String outputFileName) throws IOException {
 		try (FileWriter outputFile = new FileWriter(outputFileName)) {
 			outputFile.write(xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR));
 			System.out.println("Successfully Copied JSON Object to File...");
-			// System.out.println("\nJSON Object: " + xmlJSONObj);
 		}
 	}
 
 	public void setInputObj(Input inputObj) {
 		this.inputObj = inputObj;
 	}
-
 }
