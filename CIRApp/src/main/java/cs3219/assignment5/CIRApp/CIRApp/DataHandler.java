@@ -33,7 +33,6 @@ public class DataHandler {
 
 	public DataHandler(Input input) throws IOException {
 		this.setInputObj(input);
-		//xmlToJSON(inputObj.getDataLocation(), inputObj.getConferences());
 		parseJSONFileIntoObjArrList();
 		execute();
 	}
@@ -45,9 +44,7 @@ public class DataHandler {
 			ArrayList<String> jsonTxt = (ArrayList<String>) IOUtils.readLines(is, "UTF-8");
 			for (String i : jsonTxt) {
 				JSONObject jo = new JSONObject(i);
-				// FileManager.jsonToTxtFile(jo, "data"+ jsonTxt.indexOf(i) + ".json");
 				dataset.add(jo);
-				// System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
 			}
 		}
 		System.out.println("Number of JSONObjects in dataset is: " + dataset.size());
@@ -62,7 +59,11 @@ public class DataHandler {
 
 		switch (queryType) {
 		case "cited documents": // cited documents trend
-
+			if (queryCommand.equalsIgnoreCase("for")) {
+				getCitedDocumentsFOR();
+			} else {
+				// getCitedDocumentsTOP();
+			}
 			System.out.println("cited document trend executed");
 			break;
 		case "authors": // author trend
@@ -91,6 +92,50 @@ public class DataHandler {
 
 	}
 
+
+	private void getCitedDocumentsFOR() {
+		ArrayList<CitTrendObj> citations = new ArrayList<CitTrendObj>();
+		ArrayList<Integer> numYrs = inputObj.getNumYrs();
+		ArrayList<String> confNames = inputObj.getConferences();
+		
+		for (String confName : confNames) {
+			for (JSONObject jo : dataset) {
+				if (jo.getString("venue").contains(confName) && jo.has("year")) {
+					extractCitedDocuments(numYrs, jo, confName, citations);
+				}
+			}
+		}
+		
+		System.out.println("These are the number of citations per year " + "(" + citations.size() + ")");
+		for (CitTrendObj citOb : citations) {
+			System.out.println(citOb.getConference() + ", " + citOb.getYear() + ", " + citOb.getNumCitations());
+		}
+	}
+
+	private void extractCitedDocuments(ArrayList<Integer> numYrs, JSONObject jo, String confName, ArrayList<CitTrendObj> citations) {
+		int jsonYr = jo.getInt("year");
+		int yrRange = numYrs.size();
+		int numCitations = jo.getJSONArray("inCitations").length();
+		if (numYrs.get(0) < jsonYr && jsonYr < numYrs.get(yrRange - 1)) { //within the range specified by the user
+			if (citations.size() == 0) { //add element into new array to avoid IndexOutOfBoundException
+				citations.add(new CitTrendObj(jsonYr, numCitations, confName));
+			}
+			else {
+				for (int j=0; j< citations.size(); j++) {
+					if (citations.get(j).getYear() == jsonYr && citations.get(j).getConference().contains(confName)) {
+						citations.get(j).setNumCitations(citations.get(j).getNumCitations() + numCitations);
+						break;
+					} 
+					
+					if (j == citations.size() - 1 && numCitations != 0) {
+						CitTrendObj citationYear = new CitTrendObj(jsonYr, numCitations, confName);
+						citations.add(citationYear);									
+						break;
+					}
+				}
+			}
+		}
+	}
 
 	private void getAuthorsTOP() {
 		String[] searchLocArr = inputObj.getSearchLoc().split(" ");
@@ -296,54 +341,14 @@ public class DataHandler {
 		}
 	}
 
-	public static void xmlToJSON(String fileName, ArrayList<String> confArr)
-			throws FileNotFoundException, IOException, UnsupportedEncodingException {
-		// ArrayList<JSONObject> finalDataset = new ArrayList<JSONObject>();
-		for (int i = 0; i < confArr.size(); i++) {
-			Path fullPath = Paths.get(fileName + "\\" + confArr.get(i).toString() + "\\"
-					+ confArr.get(i).substring(0, 1) + "\\" + confArr.get(i).toString());
-
-			if (Files.isDirectory(fullPath)) {
-				try (DirectoryStream<Path> files = Files.newDirectoryStream(fullPath)) {
-					for (Path file : files) {
-						if (Files.isRegularFile(file) || Files.isSymbolicLink(file)) {
-							File xmlFile = new File(file.toString());
-							FileInputStream fin = new FileInputStream(xmlFile);
-							byte[] xmlData = new byte[(int) xmlFile.length()];
-							fin.read(xmlData);
-							fin.close();
-							TEST_XML_STRING = new String(xmlData, "UTF-8");
-							JSONObject xmlJSONObj = new JSONObject();
-
-							try {
-								xmlJSONObj = XML.toJSONObject(TEST_XML_STRING);
-								dataset.add(xmlJSONObj);
-							} catch (JSONException e) {
-								System.out.println(e.toString());
-							}
-						}
-					}
-				}
-			} else {
-				System.out.println(fullPath.toString() + "is not a directory");
-			}
-
-		}
-		System.out.println("Number of JSON Objects : " + dataset.size());
-		// System.out.println(dataset.get(0).toString());
-		// jsonToTxtFile(dataset.get(0), "jsonOutput");
-	}
-
 	public static void jsonToTxtFile(JSONObject xmlJSONObj, String outputFileName) throws IOException {
 		try (FileWriter outputFile = new FileWriter(outputFileName)) {
 			outputFile.write(xmlJSONObj.toString(PRETTY_PRINT_INDENT_FACTOR));
 			System.out.println("Successfully Copied JSON Object to File...");
-			// System.out.println("\nJSON Object: " + xmlJSONObj);
 		}
 	}
 
 	public void setInputObj(Input inputObj) {
 		this.inputObj = inputObj;
 	}
-
 }
