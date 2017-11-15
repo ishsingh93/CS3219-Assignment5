@@ -24,10 +24,16 @@ public class Parser {
 
 	Input inputObj;
 
+	
+
 	public Parser() {
 		inputObj = new Input();
 	}
 
+	public Input getInputObj() {
+		return inputObj;
+	}
+	
 	public void parseInput(String input, String dataLoc) throws IOException {
 		String[] inputArr = input.split(" ");
 		// printArr(inputArr);

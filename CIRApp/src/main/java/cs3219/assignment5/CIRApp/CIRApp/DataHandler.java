@@ -348,7 +348,9 @@ public class DataHandler {
 /*		for (AuthorObj ato : authors) {
 			System.out.println(ato.getAuthorName() + ", " + ato.getConfName() + ", " + ato.getYear());
 		}
-*/	}
+*/		output.writeCSVFileAuthorFOR("trend1 - author trend(for)", authorTrend, inputObj);
+
+	}
 
 	private void authorsToAuthorObj(ArrayList<AuthorObj> authors, ArrayList<Integer> numYrs,
 			ArrayList<String> confNames) {
