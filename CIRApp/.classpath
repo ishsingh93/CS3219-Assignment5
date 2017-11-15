@@ -22,15 +22,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/User/.m2/repository/org/json/json/20160807/json-20160807.jar" sourcepath="C:/Users/User/.m2/repository/org/json/json/20160807/json-20160807-sources.jar">
-		<attributes>
-			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="maven.groupId" value="org.json"/>
-			<attribute name="maven.artifactId" value="json"/>
-			<attribute name="maven.version" value="20160807"/>
-			<attribute name="maven.scope" value="compile"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="lib" path="C:/Program Files/Java/commons-io-2.5-bin/commons-io-2.5/commons-io-2.5.jar"/>
 	<classpathentry kind="lib" path="C:/Program Files/Java/commons-io-2.5-bin/commons-io-2.5/commons-io-2.5-javadoc.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
