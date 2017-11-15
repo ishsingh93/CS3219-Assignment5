@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+    .tooltip {
+        color: #333;
+        display: none;
+        font-size: 20px;
+        left: 45%;
+        padding: 10px;
+        position: absolute;
+        text-align: center;
+        top: 10%;
+        width: 200px;
+        z-index: 10;
+    }
+
+    .bar--positive {
+        fill: steelblue;
+    }
+
+    .bar--negative {
+        fill: darkorange;
+    }
+
+    .axis text {
+        font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+    </style>
+</head>
+
+<body>
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <script>
+    var margin = { top: 20, right: 30, bottom: 40, left: 30 },
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+        .range([0, width]);
+
+    var y = d3.scale.ordinal()
+        .rangeRoundBands([0, height], 0.1);
+
+    var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .tickSize(0)
+        .tickPadding(6);
+
+    var tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip');
+    tooltip
+        .append('div')
+        .attr('class', 'label');
+    tooltip
+        .append('div')
+        .attr('class', 'count');
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv("citationRecentness.csv", type, function(error, data) {
+        x.domain(d3.extent(data, function(d) { return d.count; })).nice();
+        y.domain(data.map(function(d) { return d.range; }));
+
+        var bar = svg.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", function(d) { return "bar bar--" + (d.count < 0 ? "negative" : "positive"); })
+            .attr("x", function(d) { return x(Math.min(0, d.count)); })
+            .attr("y", function(d) { return y(d.range); })
+            .attr("width", function(d) { return Math.abs(x(d.count) - x(0)); })
+            .attr("height", y.rangeBand());
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + x(0) + ",0)")
+            .call(yAxis);
+
+        bar.on('mouseover', function(d) {
+            tooltip.select('.label').html("Range: " + d.range);
+            tooltip.select('.count').html("Number of Paper: " + d.count);
+            tooltip.style('display', 'block');
+        });
+
+        bar.on('mouseout', function() {
+            tooltip.style('display', 'none');
+        });
+    });
+
+    function type(d) {
+        d.count = +d.count;
+        return d;
+    }
+    </script>
