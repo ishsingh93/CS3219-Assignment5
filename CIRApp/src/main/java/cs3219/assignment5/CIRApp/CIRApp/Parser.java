@@ -33,7 +33,7 @@ public class Parser {
 		// printArr(inputArr);
 		parseQuery(inputArr);
 		inputObj.setDataLocation(dataLoc);
-		InputHandler handler = new InputHandler(inputObj);
+		DataHandler dataHandle = new DataHandler(inputObj);
 	}
 
 	private void parseQuery(String[] inputArr) {
